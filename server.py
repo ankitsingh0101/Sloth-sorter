@@ -5,6 +5,8 @@ Only listens on localhost. Files and model both stay on your machine.
 """
 import json
 import os
+import subprocess
+import sys
 import urllib.request
 from pathlib import Path
 from typing import List
@@ -35,6 +37,28 @@ def clean_folder(raw: str) -> Path:
     if folder == Path(folder.anchor):
         raise HTTPException(400, "Refusing to sort a drive root.")
     return folder
+
+
+PICKER_SCRIPT = """
+import tkinter as tk
+from tkinter import filedialog
+root = tk.Tk()
+root.withdraw()
+root.attributes('-topmost', True)
+path = filedialog.askdirectory(title='Choose a folder to tidy', mustexist=True)
+root.destroy()
+print(path)
+"""
+
+
+def pick_folder() -> str:
+    """Open the native folder picker (in its own process) and return the path."""
+    out = subprocess.run([sys.executable, "-c", PICKER_SCRIPT],
+                         capture_output=True, text=True)
+    if out.returncode != 0:
+        raise RuntimeError(out.stderr.strip() or "picker failed")
+    path = out.stdout.strip()
+    return str(Path(path)) if path else ""
 
 
 class ScanReq(BaseModel):
@@ -70,6 +94,16 @@ def status():
     installed = any(n == MODEL or n.split(":")[0] == MODEL for n in names)
     return {"connected": installed, "model": MODEL,
             "reason": None if installed else "model-not-pulled"}
+
+
+@app.post("/api/browse")
+def browse():
+    """Let the user pick a folder with the native dialog. '' means cancelled."""
+    try:
+        return {"folder": pick_folder()}
+    except Exception:
+        raise HTTPException(
+            500, "Could not open the folder picker. Paste the path instead.")
 
 
 @app.post("/api/scan")

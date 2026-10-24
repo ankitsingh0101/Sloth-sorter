@@ -39,6 +39,8 @@ async function call<T>(path: string, body?: unknown): Promise<T> {
   return res.json()
 }
 
+export const browse = () => call<{ folder: string }>('/api/browse', {})
+
 export const scan = (folder: string) => call<ScanResult>('/api/scan', { folder })
 
 export const apply = (folder: string, plan: SortPlanItem[]) =>

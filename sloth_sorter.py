@@ -56,8 +56,15 @@ def ask_model(path: Path, model: str):
     prompt = (
         "You organise files. Pick ONE category from this list: "
         f"{', '.join(CATEGORIES)}.\n"
-        "Also suggest a short, clear, lowercase-with-dashes filename "
-        "WITHOUT the extension.\n"
+        "Category guide: Finance = bills, invoices, bank statements, budgets. "
+        "Study = course notes, exam prep, textbooks, assignments. "
+        "Documents = resumes, letters, reports, general documents. "
+        "Code = source code and scripts. "
+        "Other = personal lists, ideas, anything that fits nowhere else.\n"
+        "Also suggest a short, descriptive, lowercase-with-dashes filename "
+        "WITHOUT the extension, based on what the content is about. "
+        "Never use a generic name like 'notes', 'doc', 'copy' or 'new' "
+        "on its own; say what the file is about.\n"
         f"File name: {path.name}\n"
         f"Content preview: {preview(path) or '(not available)'}\n"
         'Reply ONLY with JSON: {"category": "...", "name": "..."}'

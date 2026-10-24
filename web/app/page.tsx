@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Archive, Check, ChevronRight, Clock3, FileCheck2, FolderOpen, Leaf, Loader2, Moon, RotateCcw, ScanLine, Search, Sun, Undo2, WandSparkles } from 'lucide-react'
 import { Button } from '@/components/ui/button'
-import { apply, scan, status, undo, type ScanResult, type Status } from '@/lib/api'
+import { apply, browse, scan, status, undo, type ScanResult, type Status } from '@/lib/api'
 
 const categoryStyles: Record<string, string> = {
   Documents: 'category-work', Finance: 'category-work', Study: 'category-work',
@@ -18,7 +18,7 @@ export default function Page() {
   const [info, setInfo] = useState<Status | null>(null)
   const [error, setError] = useState<string | null>(null)
   const connected = info ? info.connected : null
-  const [busy, setBusy] = useState<'scan' | 'apply' | 'undo' | null>(null)
+  const [busy, setBusy] = useState<'scan' | 'apply' | 'undo' | 'browse' | null>(null)
   const [success, setSuccess] = useState(false)
   const [dark, setDark] = useState(false)
 
@@ -33,12 +33,29 @@ export default function Page() {
     setResult((current) => current ? { ...current, files: current.files.map((file) => file.id === id ? { ...file, selected: !file.selected } : file) } : current)
   }
 
-  async function handleScan() {
+  async function handleBrowse() {
+    setBusy('browse')
+    setError(null)
+    try {
+      const { folder: picked } = await browse()
+      if (picked) {
+        setFolder(picked)
+        await handleScan(picked)
+        return
+      }
+    } catch (e) {
+      setError((e as Error).message)
+    }
+    setBusy(null)
+  }
+
+  async function handleScan(path?: string) {
+    const target = path ?? folder
     setBusy('scan')
     setSuccess(false)
     setError(null)
     try {
-      setResult(await scan(folder))
+      setResult(await scan(target))
     } catch (e) {
       setError((e as Error).message)
     }
@@ -94,7 +111,7 @@ export default function Page() {
 
         <section className="scan-card panel">
           <div className="section-label"><FolderOpen /> FOLDER TO TIDY</div>
-          <div className="scan-row"><div className="path-input-wrap"><Search /><input aria-label="Folder path" placeholder="C:\\Users\\you\\Downloads" value={folder} onChange={(event) => setFolder(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) handleScan() }} /><button aria-label="Open folder" type="button"><ChevronRight /></button></div><Button size="lg" onClick={handleScan} disabled={busy !== null || !folder}>{busy === 'scan' ? <Loader2 className="spin" data-icon="inline-start" /> : <ScanLine data-icon="inline-start" />} {busy === 'scan' ? 'Scanning…' : 'Scan folder'}</Button></div>
+          <div className="scan-row"><div className="path-input-wrap"><Search /><input aria-label="Folder path" placeholder="C:\Users\you\Downloads" value={folder} onChange={(event) => setFolder(event.target.value)} onKeyDown={(event) => { if (event.key === 'Enter' && !event.nativeEvent.isComposing && event.keyCode !== 229) handleScan() }} /></div><Button variant="outline" size="lg" onClick={handleBrowse} disabled={busy !== null}>{busy === 'browse' ? <Loader2 className="spin" data-icon="inline-start" /> : <FolderOpen data-icon="inline-start" />} Browse</Button><Button size="lg" onClick={() => handleScan()} disabled={busy !== null || !folder}>{busy === 'scan' ? <Loader2 className="spin" data-icon="inline-start" /> : <ScanLine data-icon="inline-start" />} {busy === 'scan' ? 'Scanning…' : 'Scan folder'}</Button></div>
           <p className="helper-text"><Leaf /> Everything stays local. Nothing leaves your computer.</p>
           {error && <p role="alert" style={{ color: '#b3402a', fontSize: 13, margin: '10px 0 0' }}>⚠ {error}</p>}
         </section>
