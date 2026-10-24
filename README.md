@@ -47,9 +47,16 @@ Everyone has a Downloads folder full of `IMG_2231 (1).jpg`, `final_v2_FINAL.pdf`
 
 A deliberately messy 19-file test folder, before and after one scan and apply. One click on **Undo last run** restores the left side exactly.
 
-| Before | After |
-|---|---|
-| ![Messy folder](docs/before.png) | ![Sorted folder](docs/after.png) |
+<table>
+  <tr>
+    <th width="50%">Before</th>
+    <th width="50%">After</th>
+  </tr>
+  <tr>
+    <td valign="top"><img src="docs/before.png" alt="Messy folder" width="100%"></td>
+    <td valign="top"><img src="docs/after.png" alt="Sorted folder" width="100%"></td>
+  </tr>
+</table>
 
 ## How it works
 
